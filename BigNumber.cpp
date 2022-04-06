@@ -1,70 +1,11 @@
-#include <iostream>                               
-#include <string>
-#include <algorithm>
+#include <iostream>
+#include "BigNumber.h"
 using namespace std;
-  
- /// 大数乘法
-/// @param str1 乘数1
-/// @param str2 乘数2
-string mul_bignum(string str1, string str2) {
-	bool isNeg = false;
-	if (str1[0] == '+' || str1[0] == '-') {
-		if (str1[0] == '-') {
-			isNeg = true;
-		}
 
-		str1 = str1.substr(1, str1.size() - 1);
-	}
-
-	if (str2[0] == '+' || str2[0] == '-') {
-		if (str2[0] == '-') {
-			isNeg = false;
-		}
-
-		str2 = str2.substr(1, str2.size() - 1);
-	}
-
-	int floatCount1 = 0, floatCount2 = 0;
-	size_t found1 = str1.find(".");
-	size_t found2 = str2.find(".");
-	if (found1 != std::string::npos) {
-		floatCount1 = str1.size() - 1 - found1;
-		str1.erase(found1, 1);
-	}
-
-	if (found2 != std::string::npos) {
-		floatCount2 = str2.size() - 1 - found2;
-		str2.erase(found2, 1);
-	}
-
-    int size1 = str1.size(), size2 = str2.size();
-    string str(size1 + size2, '0');
-    for (int i = size2 - 1; i >= 0; --i) {
-        int mulflag = 0, addflag = 0;
-        for (int j = size1 - 1; j >= 0; --j) {
-            int temp1 = (str2[i] - '0') * (str1[j] - '0') + mulflag;
-            mulflag = temp1 / 10;
-            temp1 = temp1 % 10;
-            int temp2 = str[i+j+1] - '0' + temp1 + addflag;
-            str[i+j+1] = temp2 % 10 + '0';
-            addflag = temp2 / 10;
-        }
-        
-        str[i] += mulflag + addflag;
-    }
-         
-    if (str[0]=='0') str=str.substr(1,str.size());
-    if (isNeg) str.insert(0, "-");
-    if (floatCount1 + floatCount2 > 0) {
-    	str.insert(str.size() - (floatCount1 + floatCount2), 1, '.' );
-    }
-    
-    return str;
-}
-
+namespace zbz {
 
 //用'0'填充整数到指定长度
-int fillzero(string& str, int size, bool inPrefix) {
+static int fillzero(string& str, int size, bool inPrefix) {
 	if (str.size() > size) {
 		return -1;
 	}
@@ -73,14 +14,17 @@ int fillzero(string& str, int size, bool inPrefix) {
 	if (inPrefix) {
 		str.insert(0, nZero, '0');
 	} else {
-		str.insert(str.size() - 1, nZero, '0');
+		if (str.size() > 0)
+            str.insert(str.size() - 1, nZero, '0');
+        else
+            str.insert(0, nZero, '0');
 	}
 
 	return 0;
 }
 
 /*相同长度的无符号大整数相加*/
-string add_same_size_positive_number(string str1, string str2, bool& highCarry) {
+static string add_same_size_positive_number(string str1, string str2, bool& highCarry) {
     int i;
    	reverse(str1.begin(), str1.end());
    	reverse(str2.begin(), str2.end());
@@ -107,7 +51,7 @@ string add_same_size_positive_number(string str1, string str2, bool& highCarry) 
 }
 
 //无符号整数加
-string add_unsigned_number(string str1, string str2) {
+static string add_unsigned_number(string str1, string str2) {
 	bool highCarry;
 	int size1 = str1.size();
 	int size2 = str2.size();
@@ -122,7 +66,7 @@ string add_unsigned_number(string str1, string str2) {
 }
 
 //无符号浮点数整数部分相加
-string add_positive_number_of_float(string str1, string str2, bool& highCarry) {
+static string add_positive_number_of_float(string str1, string str2, bool& highCarry) {
 	int size1 = str1.size();
 	int size2 = str2.size();
 	if (size1 < size2) {
@@ -135,7 +79,7 @@ string add_positive_number_of_float(string str1, string str2, bool& highCarry) {
 }
 
 //正数（支持小数点）加法
-string add_positive_number(string str1, string str2) {
+static string add_positive_number(string str1, string str2) {
 	string float1, float2;
 	string integer1 = str1, integer2 = str2;
 	//获取整数部分
@@ -170,12 +114,14 @@ string add_positive_number(string str1, string str2) {
 }
 
 // 相同长度字符串，大减小
-string sub_same_size_positive_number_great_small(string str1, string str2) {
+static string sub_same_size_positive_number_great_small(string str1, string str2) {
+    bool isFloat = false;
 	reverse(str1.begin(), str1.end());
 	reverse(str2.begin(), str2.end());
 
 	for (int i = 0; i < str1.size(); ++i) {
 		if (str1[i] == '.' && str2[i] == '.') {
+            isFloat = true;
 			continue;
 		}
 
@@ -185,26 +131,27 @@ string sub_same_size_positive_number_great_small(string str1, string str2) {
 				str1[j] = '9';
 			}
 
-			str1[++j] -= 1;
+            if (str1[j] == '.') str1[j+1] -= 1;
+            else str1[j] -= 1;
 			str1[i] += 10;
 		}
 
-		str1[i] -= str2[i];
+		str1[i] = '0' + str1[i] - str2[i];
 	}
 
 	reverse(str1.begin(), str1.end());
 
 	//	去掉开头多余的'0'
 	int i = 0;
-	while (str1[i++] == '0');
-	str1.erase(0, i - 1);
+	while (str1[i] == '0') ++i;
+	if (i > 0) str1.erase(0, isFloat ? i - 1 : i);
 
 	return str1;
 }
 
 
 //正数（支持小数点）减法
-string sub_positive_number(string str1, string str2) {
+static string sub_positive_number(string str1, string str2) {
 	string float1, float2;
 	string integer1 = str1, integer2 = str2;
 	//获取整数部分
@@ -252,14 +199,14 @@ string sub_positive_number(string str1, string str2) {
 }
 
 ///数的减法，支持浮点、正负
-string sub_number(string str1, string str2) {
+string sub_big_number(string str1, string str2) {
 	if (str1[0] != '-' && str2[0] == '-') { //+ -
 		str2 = str2.substr(1, str2.size() - 1);
 		return add_positive_number(str1, str2);
 	} else if (str1[0] == '-' && str2[0] != '-') {// - +
 		str1 = str1.substr(1, str1.size() - 1);
 		return "-" + add_positive_number(str1, str2);
-	} else if (str1[0] != '-' && str2[0] != '-') {
+	} else if (str1[0] != '-' && str2[0] != '-') {//+ +
 		if (str1[0] == '+') {
 			str1 = str1.substr(1, str1.size() - 1);
 		}
@@ -269,7 +216,7 @@ string sub_number(string str1, string str2) {
 		}
 
 		return sub_positive_number(str1, str2);
-	} else {
+	} else { //- -
 		str1 = str1.substr(1, str1.size() - 1);
 		str2 = str2.substr(1, str2.size() - 1);
 		return sub_positive_number(str2, str1);
@@ -278,7 +225,7 @@ string sub_number(string str1, string str2) {
 }
 
 ///数的加法，支持浮点、正负
-string add_number(string str1, string str2) {
+string add_big_number(string str1, string str2) {
 	if (str1[0] != '-' && str2[0] == '-') { //+ -
 		str2 = str2.substr(1, str2.size() - 1);
 		return sub_positive_number(str1, str2);
@@ -302,15 +249,75 @@ string add_number(string str1, string str2) {
 
 }
 
+/// 大数乘法，支持正负小数
+/// @param str1 乘数1
+/// @param str2 乘数2
+string mul_big_number(string str1, string str2) {
+    bool isNeg = false;
+    if (str1[0] == '+' || str1[0] == '-') {
+        if (str1[0] == '-') {
+            isNeg = true;
+        }
+
+        str1 = str1.substr(1, str1.size() - 1);
+    }
+
+    if (str2[0] == '+' || str2[0] == '-') {
+        if (str2[0] == '-') {
+            isNeg = false;
+        }
+
+        str2 = str2.substr(1, str2.size() - 1);
+    }
+
+    int floatCount1 = 0, floatCount2 = 0;
+    size_t found1 = str1.find(".");
+    size_t found2 = str2.find(".");
+    if (found1 != std::string::npos) {
+        floatCount1 = str1.size() - 1 - found1;
+        str1.erase(found1, 1);
+    }
+
+    if (found2 != std::string::npos) {
+        floatCount2 = str2.size() - 1 - found2;
+        str2.erase(found2, 1);
+    }
+
+    int size1 = str1.size(), size2 = str2.size();
+    string str(size1 + size2, '0');
+    for (int i = size2 - 1; i >= 0; --i) {
+        int mulflag = 0, addflag = 0;
+        for (int j = size1 - 1; j >= 0; --j) {
+            int temp1 = (str2[i] - '0') * (str1[j] - '0') + mulflag;
+            mulflag = temp1 / 10;
+            temp1 = temp1 % 10;
+            int temp2 = str[i+j+1] - '0' + temp1 + addflag;
+            str[i+j+1] = temp2 % 10 + '0';
+            addflag = temp2 / 10;
+        }
+        
+        str[i] += mulflag + addflag;
+    }
+         
+    if (str[0]=='0') str=str.substr(1,str.size());
+    if (isNeg) str.insert(0, "-");
+    if (floatCount1 + floatCount2 > 0) {
+        str.insert(str.size() - (floatCount1 + floatCount2), 1, '.' );
+    }
+    
+    return str;
+}
+
+} // end of using namespace zbz
 
   
- int main()
- {
+ int main() {
 	 string str1,str2;
-	 while(cin>>str1>>str2)
-	 {
-	 cout<<str1<<"*"<<str2<<"="<<endl;
-	 cout<<mul_bignum(str1,str2)<<endl;
+	 while(cin>>str1>>str2) {
+         cout<< str1<<" * "<<str2<<" = " << zbz::mul_big_number(str1, str2) << endl;
+         cout<< str1<<" + "<<str2<<" = " << zbz::add_big_number(str1, str2) << endl; 
+         cout<< str1<<" - "<<str2<<" = " << zbz::sub_big_number(str1, str2) << endl;
 	 }
+     
 	 return 0;
 }
