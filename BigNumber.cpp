@@ -1,4 +1,3 @@
-#include <iostream>
 #include "BigNumber.h"
 using namespace std;
 
@@ -23,7 +22,12 @@ static int fillzero(string& str, int size, bool inPrefix) {
 	return 0;
 }
 
-/*相同长度的无符号大整数相加*/
+//2个数字字符串比较大小
+static bool numStrge(const string& str1, const string& str2) {
+	return str1.size() > str2.size() || (str1.size() == str2.size() && str1 >= str2);
+}
+
+//相同长度的无符号大整数相加
 static string add_same_size_positive_number(string str1, string str2, bool& highCarry) {
     int i;
    	reverse(str1.begin(), str1.end());
@@ -143,8 +147,8 @@ static string sub_same_size_positive_number_great_small(string str1, string str2
 
 	//	去掉开头多余的'0'
 	int i = 0;
-	while (str1[i] == '0') ++i;
-	if (i > 0) str1.erase(0, isFloat ? i - 1 : i);
+	while (str1[i] == '0' && i < str1.size()) ++i;
+	if (i > 0) str1.erase(0, (str1.size() == i || isFloat) ? i - 1 : i);
 
 	return str1;
 }
@@ -182,8 +186,14 @@ static string sub_positive_number(string str1, string str2) {
 	}
 
 	bool isNegative = false;
-	str1 = integer1 + "." + float1;
-	str2 = integer2 + "." + float2;
+	if (float1.size() > 0) 
+		str1 = integer1 + "." + float1;
+	else 
+		str1 = integer1;
+	if (float2.size() > 0) 
+		str2 = integer2 + "." + float2;
+	else
+		str2 = integer2;
 
 	if (str1 < str2) {
 		isNegative = true;
@@ -308,16 +318,82 @@ string mul_big_number(string str1, string str2) {
     return str;
 }
 
-} // end of using namespace zbz
+/// 大数除法，正整数
+/// @param str1 数1
+/// @param str2 数2
+/// @param pointNum 小数点位数
+static string div_big_positive_integer_number(string str1, string str2, int pointNum) {
+	int floatNum = 0;
+	uint64_t integerRes = 0;
+	uint64_t nFloat = 0;
 
-  
- int main() {
-	 string str1,str2;
-	 while(cin>>str1>>str2) {
-         cout<< str1<<" * "<<str2<<" = " << zbz::mul_big_number(str1, str2) << endl;
-         cout<< str1<<" + "<<str2<<" = " << zbz::add_big_number(str1, str2) << endl; 
-         cout<< str1<<" - "<<str2<<" = " << zbz::sub_big_number(str1, str2) << endl;
-	 }
-     
-	 return 0;
+	while (numStrge(str1, str2)) {
+		++integerRes;
+		str1 = sub_big_number(str1, str2);
+		if (str1 == "0") { //整除
+			return string(1, '0' + integerRes);
+		}
+	}
+
+	string floatRes;
+	while (floatNum < pointNum) {
+		nFloat = 0;
+		str1 += '0';
+		++floatNum;
+		while (numStrge(str1, str2)) {
+			str1 = sub_big_number(str1, str2);
+			++nFloat;
+		}
+
+		floatRes.push_back('0' + nFloat);
+		if (str1 == "0") { //整除
+			break;
+		}
+	}
+
+	if (nFloat == 0) 
+		return string(1, '0' + integerRes);
+	else 
+		return string(1, '0' + integerRes) + '.' + floatRes;
 }
+
+/// 大数除法，支持正负小数
+/// @param str1 数1
+/// @param str2 数2
+/// @param pointNum 小数点位数
+string div_big_number(string str1, string str2, int pointNum) {
+	bool isNegative = false;
+	uint64_t floatNum1 = 0, floatNum2 = 0;
+	size_t found1 = str1.find('.');
+	size_t found2 = str2.find('.');
+	if (found1 != std::string::npos) {
+		floatNum1 = str1.size() - 1 - found1;
+		str1.erase(found1, 1);
+	}
+
+	if (found2 != std::string::npos) {
+		floatNum2 = str2.size() - 1 - found2;
+		str2.erase(found2, 1);
+	}
+
+	if (floatNum1 < floatNum2) {
+		str1.append(floatNum2 - floatNum1, '0');
+	} else {
+		str2.append(floatNum1 - floatNum2, '0');
+	}
+
+	if (str1[0] != '-' && str2[0] == '-') {
+		isNegative = true;
+	} else if (str1[0] == '-' && str2[0] != '-') {
+		isNegative = true;
+	}
+
+	string res = div_big_positive_integer_number(str1, str2, pointNum);
+	return isNegative ? "-" + res : res;
+
+}
+
+
+
+
+} // end of using namespace zbz
