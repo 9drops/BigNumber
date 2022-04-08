@@ -3,6 +3,9 @@ using namespace std;
 
 namespace zbz {
 
+	const string ErrorStr = "error";
+	const int SPACE = 32;
+
 //用'0'填充整数到指定长度
 static int fillzero(string& str, int size, bool inPrefix) {
 	if (str.size() > size) {
@@ -23,8 +26,20 @@ static int fillzero(string& str, int size, bool inPrefix) {
 }
 
 //2个数字字符串比较大小
-static bool numStrge(const string& str1, const string& str2) {
+static bool numge(const string& str1, const string& str2) {
 	return str1.size() > str2.size() || (str1.size() == str2.size() && str1 >= str2);
+}
+
+static size_t strtrim(const string& str) {
+	size_t i = 0;
+	//trim space
+	while (str[i] == 32 && i < str.size()) ++i;
+
+	//trim 0
+	i = 0;
+	while (str[i] == '0' && str[i + 1] != '.' && i < str.size() - 1) ++i;
+
+	return i;
 }
 
 //相同长度的无符号大整数相加
@@ -323,15 +338,16 @@ string mul_big_number(string str1, string str2) {
 /// @param str2 数2
 /// @param pointNum 小数点位数
 static string div_big_positive_integer_number(string str1, string str2, int pointNum) {
+	string integerStr, floatStr;
 	int floatNum = 0;
-	uint64_t integerRes = 0;
+	uint64_t nInteger = 0;
 	uint64_t nFloat = 0;
 
-	while (numStrge(str1, str2)) {
-		++integerRes;
+	while (numge(str1, str2)) {
+		++nInteger;
 		str1 = sub_big_number(str1, str2);
 		if (str1 == "0") { //整除
-			return string(1, '0' + integerRes);
+			return to_string(nInteger);
 		}
 	}
 
@@ -340,7 +356,7 @@ static string div_big_positive_integer_number(string str1, string str2, int poin
 		nFloat = 0;
 		str1 += '0';
 		++floatNum;
-		while (numStrge(str1, str2)) {
+		while (numge(str1, str2)) {
 			str1 = sub_big_number(str1, str2);
 			++nFloat;
 		}
@@ -352,9 +368,9 @@ static string div_big_positive_integer_number(string str1, string str2, int poin
 	}
 
 	if (nFloat == 0) 
-		return string(1, '0' + integerRes);
+		return to_string(nInteger);
 	else 
-		return string(1, '0' + integerRes) + '.' + floatRes;
+		return to_string(nInteger) + '.' + floatRes;
 }
 
 /// 大数除法，支持正负小数
@@ -363,6 +379,14 @@ static string div_big_positive_integer_number(string str1, string str2, int poin
 /// @param pointNum 小数点位数
 string div_big_number(string str1, string str2, int pointNum) {
 	bool isNegative = false;
+	if (str1[0] != '-' && str2[0] == '-') {
+		isNegative = true;
+		str2 = str2.substr(1, str2.size() - 1);
+	} else if (str1[0] == '-' && str2[0] != '-') {
+		isNegative = true;
+		str1 = str1.substr(1, str1.size() - 1);
+	}
+
 	uint64_t floatNum1 = 0, floatNum2 = 0;
 	size_t found1 = str1.find('.');
 	size_t found2 = str2.find('.');
@@ -376,24 +400,26 @@ string div_big_number(string str1, string str2, int pointNum) {
 		str2.erase(found2, 1);
 	}
 
+	//test divided zero exception
+	size_t start = strtrim(str2);
+	if (start == str2.size())
+		return ErrorStr;
+	else
+		str2 = str2.substr(start, str2.size() - start);
+
+	start = strtrim(str1);
+	str1 = str1.substr(start, str1.size() - start);
+
 	if (floatNum1 < floatNum2) {
 		str1.append(floatNum2 - floatNum1, '0');
-	} else {
+	} else if (floatNum1 > floatNum2) {
 		str2.append(floatNum1 - floatNum2, '0');
-	}
-
-	if (str1[0] != '-' && str2[0] == '-') {
-		isNegative = true;
-	} else if (str1[0] == '-' && str2[0] != '-') {
-		isNegative = true;
 	}
 
 	string res = div_big_positive_integer_number(str1, str2, pointNum);
 	return isNegative ? "-" + res : res;
 
 }
-
-
 
 
 } // end of using namespace zbz
