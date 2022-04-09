@@ -1,3 +1,4 @@
+#include <cstdlib>
 #include "BigNumber.h"
 using namespace std;
 
@@ -6,7 +7,7 @@ namespace zbz {
 	const string ErrorStr = "error";
 	const int SPACE = 32;
 
-//用'0'填充整数到指定长度
+/// Fill string to special size with '0'
 static int fillzero(string& str, int size, bool inPrefix) {
 	if (str.size() > size) {
 		return -1;
@@ -25,7 +26,7 @@ static int fillzero(string& str, int size, bool inPrefix) {
 	return 0;
 }
 
-//2个数字字符串比较大小
+/// Comparison of two number strings
 static bool numge(const string& str1, const string& str2) {
 	return str1.size() > str2.size() || (str1.size() == str2.size() && str1 >= str2);
 }
@@ -42,7 +43,7 @@ static size_t strtrim(const string& str) {
 	return i;
 }
 
-//相同长度的无符号大整数相加
+/// Addition of positive integer strings
 static string add_same_size_positive_number(string str1, string str2, bool& highCarry) {
     int i;
    	reverse(str1.begin(), str1.end());
@@ -69,7 +70,7 @@ static string add_same_size_positive_number(string str1, string str2, bool& high
    	return res;
 }
 
-//无符号整数加
+/// Addition of positive integer strings
 static string add_unsigned_number(string str1, string str2) {
 	bool highCarry;
 	int size1 = str1.size();
@@ -84,7 +85,7 @@ static string add_unsigned_number(string str1, string str2) {
 	return add_same_size_positive_number(str1, str2, highCarry);
 }
 
-//无符号浮点数整数部分相加
+/// Addition of integer in positive float number strings
 static string add_positive_number_of_float(string str1, string str2, bool& highCarry) {
 	int size1 = str1.size();
 	int size2 = str2.size();
@@ -97,11 +98,10 @@ static string add_positive_number_of_float(string str1, string str2, bool& highC
 	return add_same_size_positive_number(str1, str2, highCarry);
 }
 
-//正数（支持小数点）加法
+/// Addition of positive (float) big number
 static string add_positive_number(string str1, string str2) {
 	string float1, float2;
 	string integer1 = str1, integer2 = str2;
-	//获取整数部分
 	size_t found1 = str1.find('.');
 	size_t found2 = str2.find('.');
 	if (found1 != std::string::npos) {
@@ -132,7 +132,7 @@ static string add_positive_number(string str1, string str2) {
 	return integerRes + "." + floatRes;
 }
 
-// 相同长度字符串，大减小
+/// Subtraction of same size positive integer strings, big subtract small
 static string sub_same_size_positive_number_great_small(string str1, string str2) {
     bool isFloat = false;
 	reverse(str1.begin(), str1.end());
@@ -160,7 +160,7 @@ static string sub_same_size_positive_number_great_small(string str1, string str2
 
 	reverse(str1.begin(), str1.end());
 
-	//	去掉开头多余的'0'
+	//	trim '0'
 	int i = 0;
 	while (str1[i] == '0' && i < str1.size()) ++i;
 	if (i > 0) str1.erase(0, (str1.size() == i || isFloat) ? i - 1 : i);
@@ -169,11 +169,11 @@ static string sub_same_size_positive_number_great_small(string str1, string str2
 }
 
 
-//正数（支持小数点）减法
+/// Addition of big positive float numbers
 static string sub_positive_number(string str1, string str2) {
 	string float1, float2;
 	string integer1 = str1, integer2 = str2;
-	//获取整数部分
+	// get integer string
 	size_t found1 = str1.find('.');
 	size_t found2 = str2.find('.');
 	if (found1 != std::string::npos) {
@@ -186,14 +186,14 @@ static string sub_positive_number(string str1, string str2) {
 		float2 = str2.substr(found2 + 1, str2.size() - found2);
 	}
 
-	//将长度小的整数部分在高位填充‘0’
+	// fille '0' in the front of integer number string which size is samll
 	if (integer1.size() > integer2.size()) {
 		fillzero(integer2, integer1.size(), true);
 	} else {
 		fillzero(integer1, integer2.size(), true);
 	}
 
-	//将长度小的小数部分在低位填充‘0’
+	// fille '0' in the back of integer number float string which size is samll
 	if (float1.size() > float2.size()) {
 		fillzero(float2, float1.size(), false);
 	} else {
@@ -223,7 +223,7 @@ static string sub_positive_number(string str1, string str2) {
 	return subRes;
 }
 
-///数的减法，支持浮点、正负
+/// Subtraction of big numbers, support negative float number
 string sub_big_number(string str1, string str2) {
 	if (str1[0] != '-' && str2[0] == '-') { //+ -
 		str2 = str2.substr(1, str2.size() - 1);
@@ -249,7 +249,7 @@ string sub_big_number(string str1, string str2) {
 
 }
 
-///数的加法，支持浮点、正负
+/// Addition of big number ,support negative float number
 string add_big_number(string str1, string str2) {
 	if (str1[0] != '-' && str2[0] == '-') { //+ -
 		str2 = str2.substr(1, str2.size() - 1);
@@ -274,9 +274,9 @@ string add_big_number(string str1, string str2) {
 
 }
 
-/// 大数乘法，支持正负小数
-/// @param str1 乘数1
-/// @param str2 乘数2
+///  Multiplication of big number, support negative float number
+/// @param str1 multiplier one
+/// @param str2 multiplier two
 string mul_big_number(string str1, string str2) {
     bool isNeg = false;
     if (str1[0] == '+' || str1[0] == '-') {
@@ -333,20 +333,21 @@ string mul_big_number(string str1, string str2) {
     return str;
 }
 
-/// 大数除法，正整数
-/// @param str1 数1
-/// @param str2 数2
-/// @param pointNum 小数点位数
-static string div_big_positive_integer_number(string str1, string str2, int pointNum) {
+/// Division of big positive number
+/// !warning:it is very slow
+/// @param dividend dividend
+/// @param divisor divisor
+/// @param pointNum max float number
+static string div_big_positive_integer_number(string dividend, string divisor, int pointNum) {
 	string integerStr, floatStr;
 	int floatNum = 0;
 	uint64_t nInteger = 0;
 	uint64_t nFloat = 0;
 
-	while (numge(str1, str2)) {
+	while (numge(dividend, divisor)) {
 		++nInteger;
-		str1 = sub_big_number(str1, str2);
-		if (str1 == "0") { //整除
+		dividend = sub_big_number(dividend, divisor);
+		if (dividend == "0") { // Divisible
 			return to_string(nInteger);
 		}
 	}
@@ -354,15 +355,15 @@ static string div_big_positive_integer_number(string str1, string str2, int poin
 	string floatRes;
 	while (floatNum < pointNum) {
 		nFloat = 0;
-		str1 += '0';
+		dividend += '0';
 		++floatNum;
-		while (numge(str1, str2)) {
-			str1 = sub_big_number(str1, str2);
+		while (numge(dividend, divisor)) {
+			dividend = sub_big_number(dividend, divisor);
 			++nFloat;
 		}
 
 		floatRes.push_back('0' + nFloat);
-		if (str1 == "0") { //整除
+		if (dividend == "0") { // Divisible
 			break;
 		}
 	}
@@ -373,50 +374,94 @@ static string div_big_positive_integer_number(string str1, string str2, int poin
 		return to_string(nInteger) + '.' + floatRes;
 }
 
-/// 大数除法，支持正负小数
-/// @param str1 数1
-/// @param str2 数2
-/// @param pointNum 小数点位数
-string div_big_number(string str1, string str2, int pointNum) {
+/// A function to perform division of large numbers
+static string div_big_positive_integer_number_small_divisor(string number, int64_t divisor) {
+    // As result can be very large store it in string
+    string ans;
+ 
+    // Find prefix of number that is larger
+    // than divisor.
+    int idx = 0;
+    int64_t size = number.size();
+    int64_t temp = number[idx] - '0';
+    while (temp < divisor && idx < size - 1)
+        temp = temp * 10 + (number[++idx] - '0');
+ 
+    // Repeatedly divide divisor with temp. After
+    // every division, update temp to include one
+    // more digit.
+    int64_t leave;
+    while (number.size() > idx) {
+        // Store result in answer i.e. temp / divisor
+        ans += (temp / divisor) + '0';
+        leave = temp % divisor;
+ 
+        // Take next digit of number
+        temp = (temp % divisor) * 10 + number[++idx] - '0';
+    }
+ 
+    //point number
+    double fLeave = 1.0 * leave / divisor;
+    if (fLeave != 0) 
+        ans += to_string(fLeave);
+    // If divisor is greater than number
+    if (ans.length() == 0)
+        return "0";
+ 
+    // else return ans
+    return ans;
+}
+
+/// Big numbrer divsion，support negative and float number
+/// @param dividend dividend
+/// @param divisor divisor
+/// @param pointNum max float number
+string div_big_number(string dividend, string divisor, int pointNum) {
 	bool isNegative = false;
-	if (str1[0] != '-' && str2[0] == '-') {
+	if (dividend[0] != '-' && divisor[0] == '-') {
 		isNegative = true;
-		str2 = str2.substr(1, str2.size() - 1);
-	} else if (str1[0] == '-' && str2[0] != '-') {
+		divisor = divisor.substr(1, divisor.size() - 1);
+	} else if (dividend[0] == '-' && divisor[0] != '-') {
 		isNegative = true;
-		str1 = str1.substr(1, str1.size() - 1);
+		dividend = dividend.substr(1, dividend.size() - 1);
 	}
 
 	uint64_t floatNum1 = 0, floatNum2 = 0;
-	size_t found1 = str1.find('.');
-	size_t found2 = str2.find('.');
+	size_t found1 = dividend.find('.');
+	size_t found2 = divisor.find('.');
 	if (found1 != std::string::npos) {
-		floatNum1 = str1.size() - 1 - found1;
-		str1.erase(found1, 1);
+		floatNum1 = dividend.size() - 1 - found1;
+		dividend.erase(found1, 1);
 	}
 
 	if (found2 != std::string::npos) {
-		floatNum2 = str2.size() - 1 - found2;
-		str2.erase(found2, 1);
+		floatNum2 = divisor.size() - 1 - found2;
+		divisor.erase(found2, 1);
 	}
 
 	//test divided zero exception
-	size_t start = strtrim(str2);
-	if (start == str2.size())
+	size_t start = strtrim(divisor);
+	divisor = divisor.substr(start, divisor.size() - start);
+	if (divisor == "0")
 		return ErrorStr;
-	else
-		str2 = str2.substr(start, str2.size() - start);
 
-	start = strtrim(str1);
-	str1 = str1.substr(start, str1.size() - start);
+	start = strtrim(dividend);
+	dividend = dividend.substr(start, dividend.size() - start);
 
 	if (floatNum1 < floatNum2) {
-		str1.append(floatNum2 - floatNum1, '0');
+		dividend.append(floatNum2 - floatNum1, '0');
 	} else if (floatNum1 > floatNum2) {
-		str2.append(floatNum1 - floatNum2, '0');
+		divisor.append(floatNum1 - floatNum2, '0');
 	}
 
-	string res = div_big_positive_integer_number(str1, str2, pointNum);
+	string res;
+	if (divisor.size() < 64 - 1) {
+		int64_t iDivisor = atoll(divisor.c_str());
+		res = div_big_positive_integer_number_small_divisor(dividend, iDivisor);
+	} else {
+		res = div_big_positive_integer_number(dividend, divisor, pointNum);
+	}
+	 
 	return isNegative ? "-" + res : res;
 
 }
