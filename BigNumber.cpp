@@ -6,6 +6,7 @@ namespace zbz {
 
 	const string ErrorStr = "error";
 	const int SPACE = 32;
+	const string MaxInt64Str = "9223372036854775807";
 
 /// Fill string to special size with '0'
 static int fillzero(string& str, int size, bool inPrefix) {
@@ -27,7 +28,7 @@ static int fillzero(string& str, int size, bool inPrefix) {
 }
 
 /// Comparison of two number strings
-static bool numge(const string& str1, const string& str2) {
+static bool numstrge(const string& str1, const string& str2) {
 	return str1.size() > str2.size() || (str1.size() == str2.size() && str1 >= str2);
 }
 
@@ -344,7 +345,7 @@ static string div_big_positive_integer_number(string dividend, string divisor, i
 	uint64_t nInteger = 0;
 	uint64_t nFloat = 0;
 
-	while (numge(dividend, divisor)) {
+	while (numstrge(dividend, divisor)) {
 		++nInteger;
 		dividend = sub_big_number(dividend, divisor);
 		if (dividend == "0") { // Divisible
@@ -357,7 +358,7 @@ static string div_big_positive_integer_number(string dividend, string divisor, i
 		nFloat = 0;
 		dividend += '0';
 		++floatNum;
-		while (numge(dividend, divisor)) {
+		while (numstrge(dividend, divisor)) {
 			dividend = sub_big_number(dividend, divisor);
 			++nFloat;
 		}
@@ -455,11 +456,11 @@ string div_big_number(string dividend, string divisor, int pointNum) {
 	}
 
 	string res;
-	if (divisor.size() < 64 - 1) {
+	if (numstrge(divisor, MaxInt64Str)) {
+		res = div_big_positive_integer_number(dividend, divisor, pointNum);
+	} else {
 		int64_t iDivisor = atoll(divisor.c_str());
 		res = div_big_positive_integer_number_small_divisor(dividend, iDivisor);
-	} else {
-		res = div_big_positive_integer_number(dividend, divisor, pointNum);
 	}
 	 
 	return isNegative ? "-" + res : res;
