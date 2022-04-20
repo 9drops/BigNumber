@@ -7,6 +7,7 @@ namespace zbz {
 	const string ErrorStr = "error";
 	const int SPACE = 32;
 	const string MaxInt64Str = "9223372036854775807";
+	int BigNumber::MaxPointNum = 6;
 
 /// Fill string to special size with '0'
 static int fillzero(string& str, int size, bool inPrefix) {
@@ -410,6 +411,10 @@ static string div_big_positive_integer_number_small_divisor(string number, int64
         return "0";
  
     // else return ans
+	if (ans.size() > 2 && ans[0] == '0' && ans[1] == '0') {
+		ans = ans.substr(1, ans.size() - 1);
+	}
+
     return ans;
 }
 
@@ -465,6 +470,26 @@ string div_big_number(string dividend, string divisor, int pointNum) {
 	 
 	return isNegative ? "-" + res : res;
 
+}
+    
+string operator + (const BigNumber& a, const BigNumber& b) {
+	return  add_big_number(a.getValue(), b.getValue());
+}
+
+string operator - (const zbz::BigNumber& a, const zbz::BigNumber& b) {
+	return  sub_big_number(a.getValue(), b.getValue());
+}
+
+string operator * (const zbz::BigNumber& a, const zbz::BigNumber& b) {
+	return  mul_big_number(a.getValue(), b.getValue());
+}
+
+string operator / (const zbz::BigNumber& a, const zbz::BigNumber& b) {
+	 return div_big_number(a.getValue(), b.getValue(), BigNumber::MaxPointNum);
+}
+
+std::ostream& operator << (std::ostream& os, const BigNumber& n) {
+	return os << n.getValue();
 }
 
 

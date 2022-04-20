@@ -2,13 +2,29 @@
 #define __BigNumber_H__
 
 #include <string>
+#include <ostream>
 
 namespace zbz {
 
-std::string add_big_number(std::string str1, std::string str2);
-std::string sub_big_number(std::string str1, std::string str2);
-std::string mul_big_number(std::string str1, std::string str2);
-std::string div_big_number(std::string str1, std::string str2, int pointNum);
+class BigNumber {
+    public:
+        static int MaxPointNum;
+        BigNumber(std::string v) : value_(v) {}
+        const std::string& getValue() const {
+            return value_;
+        }
+
+    private:
+        std::string value_;
+    
+};
+
+std::string operator + (const BigNumber& a, const BigNumber& b);
+std::string operator - (const BigNumber& a, const BigNumber& b);
+std::string operator * (const BigNumber& a, const BigNumber& b);
+std::string operator / (const BigNumber& a, const BigNumber& b);
+
+std::ostream& operator << (std::ostream&, const BigNumber&);
 
 }
 
